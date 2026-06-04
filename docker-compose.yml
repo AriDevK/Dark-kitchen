@@ -1,0 +1,146 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: coffee_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-coffee_track}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coffee_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-coffee_track}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: coffee_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - coffee_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: coffee_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-app}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - coffee_internal
+      - coffee_public
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: coffee_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - coffee_internal
+      - coffee_public
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: coffee_mailpit
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_WEB_PORT:-8025}:8025"
+    networks:
+      - coffee_internal
+      - coffee_public
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: coffee_jaeger
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "14268:14268"
+      - "14250:14250"
+    networks:
+      - coffee_internal
+      - coffee_public
+
+  prometheus:
+    image: prom/prometheus
+    container_name: coffee_prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - coffee_internal
+      - coffee_public
+
+  grafana:
+    image: grafana/grafana
+    container_name: coffee_grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - coffee_internal
+      - coffee_public
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: coffee_otel_collector
+    command: ["--config=/etc/otel-collector-config.yml"]
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    volumes:
+      - ./infra/otel/otel-collector-config.yml:/etc/otel-collector-config.yml
+    networks:
+      - coffee_internal
+      - coffee_public
+    depends_on:
+      - jaeger
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  grafana_data:
+
+networks:
+  coffee_internal:
+    driver: bridge
+  coffee_public:
+    driver: bridge
