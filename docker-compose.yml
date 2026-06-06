@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
-      POSTGRES_DB: ${POSTGRES_DB:-coffee_track}
+      POSTGRES_DB: ${POSTGRES_DB:-dark_kitchen}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -13,7 +13,7 @@ services:
     networks:
       - coffee_internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-coffee_track}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-dark_kitchen}"]
       interval: 10s
       timeout: 5s
       retries: 5
