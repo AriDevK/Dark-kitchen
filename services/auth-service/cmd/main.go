@@ -13,7 +13,10 @@ import (
 	"github.com/aridevk/dark-kitchen/packages/go/common/logger"
 	"github.com/aridevk/dark-kitchen/packages/go/common/middleware"
 	"github.com/aridevk/dark-kitchen/packages/go/common/response"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/handlers"
 	"github.com/aridevk/dark-kitchen/services/auth-service/internal/repositories"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/routes"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/services"
 )
 
 func main() {
@@ -29,13 +32,16 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
-	userRepo := repositories.NewUserRepository(db)
 
 	router := gin.New()
-
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Recovery(log))
 	router.Use(middleware.Logging(log))
+
+	userRepo := repositories.NewUserRepository(db)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+	routes.RegisterRoutes(router, authHandler)
 
 	router.GET("/health", health.Handler(cfg.AppName))
 

@@ -1,0 +1,43 @@
+package handlers
+
+import (
+	"errors"
+
+	"github.com/gin-gonic/gin"
+
+	commonResponse "github.com/aridevk/dark-kitchen/packages/go/common/response"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/dto"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/services"
+)
+
+type AuthHandler struct {
+	authService *services.AuthService
+}
+
+func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{
+		authService: authService,
+	}
+}
+
+func (h *AuthHandler) Register(c *gin.Context) {
+	var req dto.RegisterRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		commonResponse.BadRequest(c, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	user, err := h.authService.Register(req)
+	if err != nil {
+		if errors.Is(err, services.ErrEmailAlreadyExists) {
+			commonResponse.BadRequest(c, "EMAIL_ALREADY_EXISTS", "Email already exists")
+			return
+		}
+
+		commonResponse.InternalServerError(c)
+		return
+	}
+
+	commonResponse.Created(c, user)
+}
