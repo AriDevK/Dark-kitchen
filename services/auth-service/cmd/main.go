@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"github.com/aridevk/dark-kitchen/packages/go/common/config"
+	"github.com/aridevk/dark-kitchen/packages/go/common/database"
 	"github.com/aridevk/dark-kitchen/packages/go/common/health"
 	"github.com/aridevk/dark-kitchen/packages/go/common/logger"
 	"github.com/aridevk/dark-kitchen/packages/go/common/middleware"
 	"github.com/aridevk/dark-kitchen/packages/go/common/response"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/repositores"
 )
 
 func main() {
@@ -21,6 +24,12 @@ func main() {
 		panic(err)
 	}
 	defer log.Sync()
+
+	db, err := database.Connect(cfg.DatabaseHost, cfg.DatabasePort, cfg.DatabaseUser, cfg.DatabasePassword, cfg.DatabaseName)
+	if err != nil {
+		log.Fatal("failed to connect to database", zap.Error(err))
+	}
+	userRepo := repositores.NewUserRepository(db)
 
 	router := gin.New()
 
@@ -33,6 +42,24 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		response.OK(c, gin.H{
 			"message": "auth-service is running",
+		})
+	})
+
+	router.GET("/users", func(c *gin.Context) {
+		users, err := userRepo.GetUsers()
+		if err != nil {
+			response.Error(
+				c,
+				http.StatusInternalServerError,
+				"INTERNAL_SERVER_ERROR",
+				"Failed to fetch users",
+			)
+			return
+		}
+
+		response.OK(c, gin.H{
+			"users": users,
+			"count": len(users),
 		})
 	})
 
