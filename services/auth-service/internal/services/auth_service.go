@@ -14,6 +14,7 @@ import (
 
 var ErrEmailAlreadyExists = errors.New("email already exists")
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrUserNotFound = errors.New("user not found")
 
 type AuthService struct {
 	userRepo  *repositories.UserRepository
@@ -94,5 +95,18 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 			Email: user.Email,
 			Role:  user.Role,
 		},
+	}, nil
+}
+
+func (s *AuthService) Me(userID uint) (*dto.AuthUserResponse, error) {
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	return &dto.AuthUserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Role:  user.Role,
 	}, nil
 }

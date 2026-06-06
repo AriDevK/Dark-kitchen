@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/aridevk/dark-kitchen/packages/go/common/middleware"
 	commonResponse "github.com/aridevk/dark-kitchen/packages/go/common/response"
 	"github.com/aridevk/dark-kitchen/services/auth-service/internal/dto"
 	"github.com/aridevk/dark-kitchen/services/auth-service/internal/services"
@@ -62,4 +63,26 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	commonResponse.OK(c, result)
+}
+
+func (h *AuthHandler) Me(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	if userID == 0 {
+		commonResponse.Unauthorized(c, "UNAUTHORIZED", "Unauthorized")
+		return
+	}
+
+	user, err := h.authService.Me(userID)
+	if err != nil {
+		if errors.Is(err, services.ErrUserNotFound) {
+			commonResponse.Unauthorized(c, "USER_NOT_FOUND", "User not found")
+			return
+		}
+
+		commonResponse.InternalServerError(c)
+		return
+	}
+
+	commonResponse.OK(c, user)
 }

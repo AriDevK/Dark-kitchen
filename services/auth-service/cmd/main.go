@@ -41,7 +41,7 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTAccessTokenTTLMinutes)
 	authHandler := handlers.NewAuthHandler(authService)
-	routes.RegisterRoutes(router, authHandler)
+	routes.RegisterRoutes(router, authHandler, cfg.JWTSecret)
 
 	router.GET("/health", health.Handler(cfg.AppName))
 
