@@ -13,7 +13,7 @@ import (
 	"github.com/aridevk/dark-kitchen/packages/go/common/logger"
 	"github.com/aridevk/dark-kitchen/packages/go/common/middleware"
 	"github.com/aridevk/dark-kitchen/packages/go/common/response"
-	"github.com/aridevk/dark-kitchen/services/auth-service/internal/repositores"
+	"github.com/aridevk/dark-kitchen/services/auth-service/internal/repositories"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
-	userRepo := repositores.NewUserRepository(db)
+	userRepo := repositories.NewUserRepository(db)
 
 	router := gin.New()
 

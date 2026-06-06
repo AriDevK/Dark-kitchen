@@ -1,4 +1,4 @@
-package repositores
+package repositories
 
 import (
 	"github.com/aridevk/dark-kitchen/services/auth-service/internal/models"
@@ -20,4 +20,19 @@ func (r *UserRepository) GetUsers() ([]models.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
+	var user models.User
+
+	err := r.db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) Create(user *models.User) error {
+	return r.db.Create(user).Error
 }
