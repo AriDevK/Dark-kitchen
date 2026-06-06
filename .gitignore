@@ -101,7 +101,6 @@ docker-volumes/
 
 # =========================
 
-*.sql
 *.dump
 *.bak
 
