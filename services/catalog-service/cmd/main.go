@@ -57,7 +57,7 @@ func main() {
 		})
 	})
 
-	routes.RegisterRoutes(router, catalogHandler)
+	routes.RegisterRoutes(router, catalogHandler, cfg.JWTSecret)
 
 	addr := fmt.Sprintf(":%s", cfg.AppPort)
 
