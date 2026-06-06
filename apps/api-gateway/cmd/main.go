@@ -63,7 +63,7 @@ func main() {
 		})
 	})
 
-	if err := routes.RegisterRoutes(router, cfg.AuthServiceURL); err != nil {
+	if err := routes.RegisterRoutes(router, cfg.AuthServiceURL, cfg.CatalogServiceURL); err != nil {
 		log.Fatal("failed to register gateway routes", zap.Error(err))
 	}
 
@@ -73,6 +73,7 @@ func main() {
 		zap.String("addr", addr),
 		zap.String("env", cfg.AppEnv),
 		zap.String("auth_service_url", cfg.AuthServiceURL),
+		zap.String("catalog_service_url", cfg.CatalogServiceURL),
 	)
 
 	if err := router.Run(addr); err != nil {

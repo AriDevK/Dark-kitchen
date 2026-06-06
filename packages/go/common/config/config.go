@@ -19,7 +19,8 @@ type Config struct {
 	JWTAccessTokenTTLMinutes int
 	JWTRefreshTokenTTLDays   int
 
-	AuthServiceURL string
+	AuthServiceURL    string
+	CatalogServiceURL string
 }
 
 func Load() Config {
@@ -30,7 +31,7 @@ func Load() Config {
 	viper.SetDefault("JWT_ACCESS_TOKEN_TTL_MINUTES", 15)
 	viper.SetDefault("JWT_REFRESH_TOKEN_TTL_DAYS", 7)
 	viper.SetDefault("AUTH_SERVICE_URL", "http://auth-service:8080")
-
+	viper.SetDefault("CATALOG_SERVICE_URL", "http://catalog-service:8080")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -49,5 +50,6 @@ func Load() Config {
 		JWTAccessTokenTTLMinutes: viper.GetInt("JWT_ACCESS_TOKEN_TTL_MINUTES"),
 		JWTRefreshTokenTTLDays:   viper.GetInt("JWT_REFRESH_TOKEN_TTL_DAYS"),
 		AuthServiceURL:           viper.GetString("AUTH_SERVICE_URL"),
+		CatalogServiceURL:        viper.GetString("CATALOG_SERVICE_URL"),
 	}
 }

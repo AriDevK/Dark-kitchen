@@ -41,3 +41,15 @@ auth-migrate-down:
 	-path services/auth-service/migrations \
 	-database "postgres://app:app@localhost:5432/dark_kitchen?sslmode=disable" \
 	down 1
+
+catalog-migrate-up:
+	migrate \
+		-path services/catalog-service/migrations \
+		-database "postgres://app:app@localhost:5432/dark_kitchen?sslmode=disable" \
+		up
+
+catalog-migrate-down:
+	migrate \
+		-path services/catalog-service/migrations \
+		-database "postgres://app:app@localhost:5432/dark_kitchen?sslmode=disable" \
+		down 1
