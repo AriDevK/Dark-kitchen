@@ -28,7 +28,6 @@ func Load() Config {
 	viper.SetDefault("JWT_ACCESS_TOKEN_TTL_MINUTES", 15)
 	viper.SetDefault("JWT_REFRESH_TOKEN_TTL_DAYS", 7)
 
-	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 

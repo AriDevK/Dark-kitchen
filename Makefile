@@ -9,10 +9,10 @@ prod:
 	$(COMPOSE) --env-file .env -f $(COMPOSE_BASE) -f $(COMPOSE_PROD) up -d --build
 
 dev:
-	$(COMPOSE) -f $(COMPOSE_BASE) -f $(COMPOSE_DEV) up --build
+	$(COMPOSE) --env-file .env -f $(COMPOSE_BASE) -f $(COMPOSE_DEV) up --build
 
 ddev:
-	$(COMPOSE) -f $(COMPOSE_BASE) -f $(COMPOSE_DEV) up -d --build
+	$(COMPOSE) --env-file .env -f $(COMPOSE_BASE) -f $(COMPOSE_DEV) up -d --build
 
 down:
 	$(COMPOSE) down
