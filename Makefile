@@ -29,3 +29,15 @@ ps:
 
 clean:
 	$(COMPOSE) down -v --remove-orphans
+
+auth-migrate-up:
+	migrate \
+	-path services/auth-service/migrations \
+	-database "postgres://app:app@localhost:5432/dark_kitchen?sslmode=disable" \
+	up
+
+auth-migrate-down:
+	migrate \
+	-path services/auth-service/migrations \
+	-database "postgres://app:app@localhost:5432/dark_kitchen?sslmode=disable" \
+	down 1
