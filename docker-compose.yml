@@ -18,6 +18,24 @@ services:
       timeout: 5s
       retries: 5
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: coffee-api-gateway
+    environment:
+      APP_NAME: api-gateway
+      APP_ENV: ${APP_ENV}
+      APP_PORT: 8080
+
+      AUTH_SERVICE_URL: http://auth-service:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+    networks:
+      - coffee_internal
+
   auth-service:
     build:
       context: .

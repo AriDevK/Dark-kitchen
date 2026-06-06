@@ -18,6 +18,8 @@ type Config struct {
 	JWTSecret                string
 	JWTAccessTokenTTLMinutes int
 	JWTRefreshTokenTTLDays   int
+
+	AuthServiceURL string
 }
 
 func Load() Config {
@@ -27,6 +29,7 @@ func Load() Config {
 	viper.SetDefault("JWT_SECRET", "dev-secret")
 	viper.SetDefault("JWT_ACCESS_TOKEN_TTL_MINUTES", 15)
 	viper.SetDefault("JWT_REFRESH_TOKEN_TTL_DAYS", 7)
+	viper.SetDefault("AUTH_SERVICE_URL", "http://auth-service:8080")
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -45,5 +48,6 @@ func Load() Config {
 		JWTSecret:                viper.GetString("JWT_SECRET"),
 		JWTAccessTokenTTLMinutes: viper.GetInt("JWT_ACCESS_TOKEN_TTL_MINUTES"),
 		JWTRefreshTokenTTLDays:   viper.GetInt("JWT_REFRESH_TOKEN_TTL_DAYS"),
+		AuthServiceURL:           viper.GetString("AUTH_SERVICE_URL"),
 	}
 }
