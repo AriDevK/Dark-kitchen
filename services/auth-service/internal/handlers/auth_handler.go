@@ -41,3 +41,25 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	commonResponse.Created(c, user)
 }
+
+func (h *AuthHandler) Login(c *gin.Context) {
+	var req dto.LoginRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		commonResponse.BadRequest(c, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	result, err := h.authService.Login(req)
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidCredentials) {
+			commonResponse.Unauthorized(c, "INVALID_CREDENTIALS", "Invalid email or password")
+			return
+		}
+
+		commonResponse.InternalServerError(c)
+		return
+	}
+
+	commonResponse.OK(c, result)
+}
