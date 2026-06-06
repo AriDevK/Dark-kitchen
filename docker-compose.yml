@@ -89,6 +89,20 @@ services:
     networks:
       - coffee_internal
 
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: coffee-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - coffee_internal
+
 
   # redis:
   #   image: redis:7
