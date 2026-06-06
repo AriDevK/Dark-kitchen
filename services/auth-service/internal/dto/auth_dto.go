@@ -18,6 +18,14 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string           `json:"accessToken"`
-	User        AuthUserResponse `json:"user"`
+	AccessToken  string           `json:"accessToken"`
+	RefreshToken string           `json:"refreshToken"`
+	User         AuthUserResponse `json:"user"`
+}
+type RefreshRequest struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
 }

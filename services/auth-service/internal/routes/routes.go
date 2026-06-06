@@ -12,9 +12,12 @@ func RegisterRoutes(router *gin.Engine, authHandler *handlers.AuthHandler, jwtSe
 
 	auth.POST("/register", authHandler.Register)
 	auth.POST("/login", authHandler.Login)
+	auth.POST("/refresh", authHandler.Refresh)
+	auth.POST("/logout", authHandler.Logout)
 
 	protected := auth.Group("")
 	protected.Use(commonMiddleware.JWT(jwtSecret))
 
 	protected.GET("/me", authHandler.Me)
+
 }

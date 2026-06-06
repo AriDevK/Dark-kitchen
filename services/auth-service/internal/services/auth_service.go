@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -15,18 +16,23 @@ import (
 var ErrEmailAlreadyExists = errors.New("email already exists")
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrUserNotFound = errors.New("user not found")
+var ErrInvalidRefreshToken = errors.New("invalid refresh token")
 
 type AuthService struct {
-	userRepo  *repositories.UserRepository
-	jwtSecret string
-	jwtTTL    int
+	userRepo         *repositories.UserRepository
+	jwtSecret        string
+	jwtTTL           int
+	refreshTokenRepo *repositories.RefreshTokenRepository
+	refreshTTLDays   int
 }
 
-func NewAuthService(userRepo *repositories.UserRepository, jwtSecret string, jwtTTL int) *AuthService {
+func NewAuthService(userRepo *repositories.UserRepository, refreshTokenRepo *repositories.RefreshTokenRepository, jwtSecret string, jwtTTL int, refreshTTLDays int) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
-		jwtTTL:    jwtTTL,
+		userRepo:         userRepo,
+		jwtSecret:        jwtSecret,
+		jwtTTL:           jwtTTL,
+		refreshTokenRepo: refreshTokenRepo,
+		refreshTTLDays:   refreshTTLDays,
 	}
 }
 
@@ -88,8 +94,14 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		return nil, err
 	}
 
+	refreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &dto.LoginResponse{
-		AccessToken: accessToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 		User: dto.AuthUserResponse{
 			ID:    user.ID,
 			Email: user.Email,
@@ -109,4 +121,80 @@ func (s *AuthService) Me(userID uint) (*dto.AuthUserResponse, error) {
 		Email: user.Email,
 		Role:  user.Role,
 	}, nil
+}
+
+func (s *AuthService) createRefreshToken(userID uint) (string, error) {
+	rawToken, err := auth.GenerateRefreshToken()
+	if err != nil {
+		return "", err
+	}
+
+	tokenHash := auth.HashRefreshToken(rawToken)
+
+	refreshToken := &models.RefreshToken{
+		UserID:    userID,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().AddDate(0, 0, s.refreshTTLDays),
+	}
+
+	if err := s.refreshTokenRepo.Create(refreshToken); err != nil {
+		return "", err
+	}
+
+	return rawToken, nil
+}
+
+func (s *AuthService) Refresh(req dto.RefreshRequest) (*dto.LoginResponse, error) {
+	tokenHash := auth.HashRefreshToken(req.RefreshToken)
+
+	storedToken, err := s.refreshTokenRepo.FindValidByHash(tokenHash)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	user, err := s.userRepo.FindByID(storedToken.UserID)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	if err := s.refreshTokenRepo.RevokeByID(storedToken.ID); err != nil {
+		return nil, err
+	}
+
+	newAccessToken, err := auth.GenerateAccessToken(
+		user.ID,
+		user.Email,
+		user.Role,
+		s.jwtSecret,
+		s.jwtTTL,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	newRefreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.LoginResponse{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+		User: dto.AuthUserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+			Role:  user.Role,
+		},
+	}, nil
+}
+
+func (s *AuthService) Logout(req dto.LogoutRequest) error {
+	tokenHash := auth.HashRefreshToken(req.RefreshToken)
+
+	storedToken, err := s.refreshTokenRepo.FindValidByHash(tokenHash)
+	if err != nil {
+		return ErrInvalidRefreshToken
+	}
+
+	return s.refreshTokenRepo.RevokeByID(storedToken.ID)
 }

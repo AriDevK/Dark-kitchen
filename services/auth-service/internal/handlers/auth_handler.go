@@ -86,3 +86,49 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	commonResponse.OK(c, user)
 }
+
+func (h *AuthHandler) Refresh(c *gin.Context) {
+	var req dto.RefreshRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		commonResponse.BadRequest(c, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	result, err := h.authService.Refresh(req)
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidRefreshToken) {
+			commonResponse.Unauthorized(c, "INVALID_REFRESH_TOKEN", "Invalid or expired refresh token")
+			return
+		}
+
+		commonResponse.InternalServerError(c)
+		return
+	}
+
+	commonResponse.OK(c, result)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	var req dto.LogoutRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		commonResponse.BadRequest(c, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	err := h.authService.Logout(req)
+	if err != nil {
+		if errors.Is(err, services.ErrInvalidRefreshToken) {
+			commonResponse.Unauthorized(c, "INVALID_REFRESH_TOKEN", "Invalid or expired refresh token")
+			return
+		}
+
+		commonResponse.InternalServerError(c)
+		return
+	}
+
+	commonResponse.OK(c, gin.H{
+		"message": "Logged out successfully",
+	})
+}

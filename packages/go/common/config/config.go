@@ -17,6 +17,7 @@ type Config struct {
 	DatabaseName             string
 	JWTSecret                string
 	JWTAccessTokenTTLMinutes int
+	JWTRefreshTokenTTLDays   int
 }
 
 func Load() Config {
@@ -25,6 +26,7 @@ func Load() Config {
 	viper.SetDefault("APP_PORT", "8080")
 	viper.SetDefault("JWT_SECRET", "dev-secret")
 	viper.SetDefault("JWT_ACCESS_TOKEN_TTL_MINUTES", 15)
+	viper.SetDefault("JWT_REFRESH_TOKEN_TTL_DAYS", 7)
 
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
@@ -43,5 +45,6 @@ func Load() Config {
 		DatabaseName:             viper.GetString("DATABASE_NAME"),
 		JWTSecret:                viper.GetString("JWT_SECRET"),
 		JWTAccessTokenTTLMinutes: viper.GetInt("JWT_ACCESS_TOKEN_TTL_MINUTES"),
+		JWTRefreshTokenTTLDays:   viper.GetInt("JWT_REFRESH_TOKEN_TTL_DAYS"),
 	}
 }

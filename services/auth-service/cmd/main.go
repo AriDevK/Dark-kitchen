@@ -39,7 +39,8 @@ func main() {
 	router.Use(middleware.Logging(log))
 
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTAccessTokenTTLMinutes)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo, cfg.JWTSecret, cfg.JWTAccessTokenTTLMinutes, cfg.JWTRefreshTokenTTLDays)
 	authHandler := handlers.NewAuthHandler(authService)
 	routes.RegisterRoutes(router, authHandler, cfg.JWTSecret)
 
